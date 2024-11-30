@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Геолокация и Хранилища</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #comments { margin-top: 20px; }
+        .comment { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Геолокация и Хранилища</h1>
+
+    <button id="getLocation">Определить местоположение</button>
+    <p id="coordinates"></p>
+
+    <form id="commentForm">
+        <input type="text" id="comment" placeholder="Введите комментарий" required>
+        <button type="submit">Сохранить в LocalStorage</button>
+    </form>
+
+    <h2>Сохраненные комментарии</h2>
+    <div id="comments"></div>
+
+    <script>
+        const coordinatesElement = document.getElementById('coordinates');
+        const commentForm = document.getElementById('commentForm');
+        const commentInput = document.getElementById('comment');
+        const commentsElement = document.getElementById('comments');
+
+        let currentLocation = {};
+
+        document.getElementById('getLocation').onclick = () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    currentLocation.latitude = position.coords.latitude;
+                    currentLocation.longitude = position.coords.longitude;
+                    coordinatesElement.textContent = `Широта: ${currentLocation.latitude}, Долгота: ${currentLocation.longitude}`;
+                }, () => {
+                    alert('Не удалось получить местоположение.');
+                });
+            } else {
+                alert('Geolocation не поддерживается вашим браузером.');
+            }
+        };
+
+        commentForm.onsubmit = (event) => {
+            event.preventDefault();
+            const comment = commentInput.value;
+
+            if (currentLocation.latitude && currentLocation.longitude) {
+                const commentData = {
+                    comment: comment,
+                    location: currentLocation
+                };
+                localStorage.setItem(Date.now(), JSON.stringify(commentData));
+                commentInput.value = '';
+                displayComments();
+            } else {
+                alert('Сначала определите местоположение.');
+            }
+        };
+
+        function displayComments() {
+            commentsElement.innerHTML = '';
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const data = JSON.parse(localStorage.getItem(key));
+                const commentDiv = document.createElement('div');
+                commentDiv.className = 'comment';
+                commentDiv.textContent = `Комментарий: ${data.comment} | Широта: ${data.location.latitude}, Долгота: ${data.location.longitude}`;
+                commentsElement.appendChild(commentDiv);
+            }
+        }
+
+        displayComments();
+    </script>
+</body>
+</html>
